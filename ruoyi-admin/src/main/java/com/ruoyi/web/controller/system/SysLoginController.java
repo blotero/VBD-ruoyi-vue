@@ -1,5 +1,6 @@
 package com.ruoyi.web.controller.system;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -8,12 +9,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import com.ruoyi.common.constant.CacheConstants;
 import com.ruoyi.common.constant.Constants;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.domain.entity.SysMenu;
 import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.core.domain.model.LoginBody;
 import com.ruoyi.common.core.domain.model.LoginUser;
+import com.ruoyi.common.core.redis.RedisCache;
 import com.ruoyi.common.core.text.Convert;
 import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.common.utils.SecurityUtils;
@@ -47,6 +50,9 @@ public class SysLoginController
     @Autowired
     private ISysConfigService configService;
 
+    @Autowired
+    private RedisCache redisCache;
+
     /**
      * 登录方法
      * 
@@ -61,6 +67,31 @@ public class SysLoginController
         String token = loginService.login(loginBody.getUsername(), loginBody.getPassword(), loginBody.getCode(),
                 loginBody.getUuid());
         ajax.put(Constants.TOKEN, token);
+        return ajax;
+    }
+
+    /**
+     * 退出全部设备
+     * 
+     * @return 结果
+     */
+    @PostMapping("/logout/all")
+    public AjaxResult logoutAll()
+    {
+        Long userId = SecurityUtils.getUserId();
+        Collection<String> keys = redisCache.keys(CacheConstants.LOGIN_TOKEN_KEY + "*");
+        int count = 0;
+        for (String key : keys)
+        {
+            LoginUser online = redisCache.getCacheObject(key);
+            if (StringUtils.isNotNull(online) && userId.equals(online.getUserId()))
+            {
+                tokenService.delLoginUser(key);
+                count++;
+            }
+        }
+        AjaxResult ajax = AjaxResult.success();
+        ajax.put("count", count);
         return ajax;
     }
 
