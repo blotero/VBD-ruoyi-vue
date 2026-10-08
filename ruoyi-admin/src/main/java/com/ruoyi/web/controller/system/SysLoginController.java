@@ -86,7 +86,7 @@ public class SysLoginController
             LoginUser online = redisCache.getCacheObject(key);
             if (StringUtils.isNotNull(online) && userId.equals(online.getUserId()))
             {
-                tokenService.delLoginUser(key);
+                tokenService.delLoginUser(online.getToken());
                 count++;
             }
         }
