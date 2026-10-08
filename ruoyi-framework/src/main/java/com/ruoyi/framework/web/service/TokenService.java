@@ -96,7 +96,7 @@ public class TokenService
     private LoginUser loadLoginUser(String userKey)
     {
         LoginUser user = localUsers.get(userKey);
-        if (user != null && user.getExpireTime() > System.currentTimeMillis())
+        if (user != null && user.getExpireTime() > System.currentTimeMillis() && redisCache.hasKey(userKey))
         {
             return user;
         }
