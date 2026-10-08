@@ -119,6 +119,17 @@ public class SysProfileController extends BaseController
     }
 
     /**
+     * 退出全部设备
+     */
+    @Log(title = "个人信息", businessType = BusinessType.FORCE)
+    @PostMapping("/logoutAll")
+    public AjaxResult logoutAll()
+    {
+        int count = tokenService.delLoginUserByUserId(getUserId());
+        return success(count);
+    }
+
+    /**
      * 头像上传
      */
     @Log(title = "用户头像", businessType = BusinessType.UPDATE)

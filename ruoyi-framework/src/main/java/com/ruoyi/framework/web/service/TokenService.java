@@ -267,4 +267,30 @@ public class TokenService
             log.info("角色[{}]权限变更，已刷新在线用户[{}]的权限缓存", roleId, loginUser.getUsername());
         }
     }
+
+    /**
+     * 删除指定用户的全部登录信息
+     *
+     * @param userId 用户ID
+     * @return 删除的会话数量
+     */
+    public int delLoginUserByUserId(Long userId)
+    {
+        Collection<String> keys = redisCache.keys(CacheConstants.LOGIN_TOKEN_KEY + "*");
+        if (userId == null || keys == null || keys.isEmpty())
+        {
+            return 0;
+        }
+        int count = 0;
+        for (String key : keys)
+        {
+            LoginUser loginUser = redisCache.getCacheObject(key);
+            if (loginUser != null && userId.equals(loginUser.getUserId()))
+            {
+                redisCache.deleteObject(key);
+                count++;
+            }
+        }
+        return count;
+    }
 }
