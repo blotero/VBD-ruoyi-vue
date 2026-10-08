@@ -64,21 +64,36 @@ public class TokenService
     {
         // 获取请求携带的令牌
         String token = getToken(request);
-        if (StringUtils.isNotEmpty(token))
+        return getLoginUser(token);
+    }
+
+    /**
+     * 根据令牌获取用户身份信息
+     *
+     * @param token 令牌
+     * @return 用户信息
+     */
+    public LoginUser getLoginUser(String token)
+    {
+        if (StringUtils.isEmpty(token))
         {
-            try
+            return null;
+        }
+        try
+        {
+            Claims claims = parseToken(token);
+            // 解析对应的权限以及用户信息
+            String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
+            String username = (String) claims.get(Constants.JWT_USERNAME);
+            LoginUser user = redisCache.getCacheObject(getTokenKey(uuid));
+            if (StringUtils.isNotNull(user) && StringUtils.equals(username, user.getUsername()))
             {
-                Claims claims = parseToken(token);
-                // 解析对应的权限以及用户信息
-                String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
-                String userKey = getTokenKey(uuid);
-                LoginUser user = redisCache.getCacheObject(userKey);
                 return user;
             }
-            catch (Exception e)
-            {
-                log.error("获取用户信息异常'{}'", e.getMessage());
-            }
+        }
+        catch (Exception e)
+        {
+            log.error("获取用户信息异常'{}'", e.getMessage());
         }
         return null;
     }
