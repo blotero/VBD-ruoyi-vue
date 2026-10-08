@@ -80,4 +80,27 @@ public class SysUserOnlineController extends BaseController
         redisCache.deleteObject(CacheConstants.LOGIN_TOKEN_KEY + tokenId);
         return success();
     }
+
+    /**
+     * 强退指定用户的全部会话
+     */
+    @PreAuthorize("@ss.hasPermi('monitor:online:forceLogout')")
+    @Log(title = "在线用户", businessType = BusinessType.FORCE)
+    @DeleteMapping("/user/{userName}")
+    public AjaxResult forceLogoutByUserName(@PathVariable String userName)
+    {
+        Collection<String> keys = redisCache.keys(CacheConstants.LOGIN_TOKEN_KEY + "*");
+        int count = 0;
+        for (String key : keys)
+        {
+            LoginUser user = redisCache.getCacheObject(key);
+            if (StringUtils.isNotNull(user) && StringUtils.isNotNull(user.getUser())
+                    && StringUtils.equals(userName, user.getUsername()))
+            {
+                redisCache.deleteObject(key);
+                count++;
+            }
+        }
+        return success(count);
+    }
 }
