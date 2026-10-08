@@ -88,7 +88,7 @@ public class SysUserOnlineController extends BaseController
             return error("用户已下线");
         }
         AsyncManager.me().execute(AsyncFactory.recordLogininfor(loginUser.getUsername(), Constants.LOGOUT, MessageUtils.message("user.forcelogout")));
-        redisCache.deleteObject(tokenId);
+        redisCache.deleteObject(userKey);
         return success();
     }
 }
