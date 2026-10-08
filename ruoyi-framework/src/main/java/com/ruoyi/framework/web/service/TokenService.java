@@ -84,6 +84,17 @@ public class TokenService
     }
 
     /**
+     * 获取请求令牌中的数据声明
+     *
+     * @return 数据声明
+     */
+    public Claims getClaims(HttpServletRequest request)
+    {
+        String token = getToken(request);
+        return StringUtils.isNotEmpty(token) ? parseToken(token) : null;
+    }
+
+    /**
      * 设置用户身份信息
      */
     public void setLoginUser(LoginUser loginUser)
