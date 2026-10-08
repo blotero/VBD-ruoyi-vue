@@ -3,6 +3,7 @@ package com.ruoyi.framework.web.service;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,9 @@ public class TokenService
     @Autowired
     private RedisCache redisCache;
 
+    // 本地用户缓存
+    private final Map<String, LoginUser> localUsers = new ConcurrentHashMap<>();
+
     /**
      * 获取用户身份信息
      * 
@@ -72,7 +76,7 @@ public class TokenService
                 // 解析对应的权限以及用户信息
                 String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
                 String userKey = getTokenKey(uuid);
-                LoginUser user = redisCache.getCacheObject(userKey);
+                LoginUser user = loadLoginUser(userKey);
                 return user;
             }
             catch (Exception e)
@@ -81,6 +85,31 @@ public class TokenService
             }
         }
         return null;
+    }
+
+    /**
+     * 加载用户身份信息，优先读取本地缓存
+     * 
+     * @param userKey 缓存键
+     * @return 用户信息
+     */
+    private LoginUser loadLoginUser(String userKey)
+    {
+        LoginUser user = localUsers.get(userKey);
+        if (user != null && user.getExpireTime() > System.currentTimeMillis())
+        {
+            return user;
+        }
+        user = redisCache.getCacheObject(userKey);
+        if (user != null)
+        {
+            localUsers.put(userKey, user);
+        }
+        else
+        {
+            localUsers.remove(userKey);
+        }
+        return user;
     }
 
     /**
