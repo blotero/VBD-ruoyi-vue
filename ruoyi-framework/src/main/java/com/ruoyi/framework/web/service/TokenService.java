@@ -107,6 +107,36 @@ public class TokenService
     }
 
     /**
+     * 删除指定用户在所有终端的身份信息
+     *
+     * @param userId 用户ID
+     * @return 删除的会话数
+     */
+    public int delLoginUserByUserId(Long userId)
+    {
+        if (StringUtils.isNull(userId))
+        {
+            return 0;
+        }
+        Collection<String> keys = redisCache.keys(CacheConstants.LOGIN_TOKEN_KEY + "*");
+        if (keys == null || keys.isEmpty())
+        {
+            return 0;
+        }
+        int count = 0;
+        for (String key : keys)
+        {
+            LoginUser loginUser = redisCache.getCacheObject(key);
+            if (loginUser != null && userId.equals(loginUser.getUserId()))
+            {
+                redisCache.deleteObject(key);
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
      * 创建令牌
      * 
      * @param loginUser 用户信息
