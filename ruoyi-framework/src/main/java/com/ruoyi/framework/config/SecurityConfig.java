@@ -18,6 +18,7 @@ import com.ruoyi.framework.config.properties.PermitAllUrlProperties;
 import com.ruoyi.framework.security.filter.JwtAuthenticationTokenFilter;
 import com.ruoyi.framework.security.handle.AuthenticationEntryPointImpl;
 import com.ruoyi.framework.security.handle.LogoutSuccessHandlerImpl;
+import com.ruoyi.framework.security.handle.TokenLogoutHandler;
 
 /**
  * spring security配置
@@ -39,6 +40,9 @@ public class SecurityConfig
      */
     @Autowired
     private LogoutSuccessHandlerImpl logoutSuccessHandler;
+
+    @Autowired
+    private TokenLogoutHandler tokenLogoutHandler;
 
     /**
      * token认证过滤器
@@ -108,7 +112,7 @@ public class SecurityConfig
                     .anyRequest().authenticated();
             })
             // 添加Logout filter
-            .logout(logout -> logout.logoutUrl("/logout").logoutSuccessHandler(logoutSuccessHandler))
+            .logout(logout -> logout.logoutUrl("/logout").addLogoutHandler(tokenLogoutHandler).logoutSuccessHandler(logoutSuccessHandler))
             // 添加JWT filter
             .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
             // 添加CORS filter
