@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
+import org.springframework.security.authentication.event.LogoutSuccessEvent;
 import org.springframework.stereotype.Component;
 import com.ruoyi.common.constant.CacheConstants;
 import com.ruoyi.common.constant.Constants;
@@ -103,6 +105,19 @@ public class TokenService
         {
             String userKey = getTokenKey(token);
             redisCache.deleteObject(userKey);
+        }
+    }
+
+    /**
+     * 退出成功后删除用户缓存记录
+     */
+    @EventListener
+    public void onLogoutSuccess(LogoutSuccessEvent event)
+    {
+        Object principal = event.getAuthentication().getPrincipal();
+        if (principal instanceof LoginUser loginUser)
+        {
+            delLoginUser(loginUser.getToken());
         }
     }
 
